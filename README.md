@@ -15,4 +15,4 @@ This way you can build triangle plots.
 
 # Example
 
-![](fig/figs.png)
+![](figs/fig.png)
