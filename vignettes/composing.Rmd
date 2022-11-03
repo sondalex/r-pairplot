@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-Subplots are laid out based on [patchwork::wrap_elements()].
+Subplots are laid out based on [patchwork::wrap_elements()](https://patchwork.data-imaginist.com/reference/wrap_elements.html).
 The obtained subplot can be embedded in another layout:
 
 ```{r setup, fig.height=10, fig.width=20}

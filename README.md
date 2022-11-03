@@ -1,6 +1,6 @@
 # pairplot
 
-Library for making pairplots in R, inspired by [seaborn.pairplot](https://seaborn.pydata.org/generated/seaborn.pairplot.html) and [GGally::ggpairs()].
+Library for making pairplots in R, inspired by [seaborn.pairplot](https://seaborn.pydata.org/generated/seaborn.pairplot.html) and [GGally::ggpairs()][https://ggobi.github.io/ggally/reference/ggpairs.html].
 and based on `ggplot2` and `patchwork`.
 This package is small but designed to be general. 
 
@@ -13,4 +13,6 @@ Each region can be mapped to a plot function or NULL.
 IF NULL, the element_blank() is assigned. 
 This way you can build triangle plots.
 
+# Example
 
+![](fig/figs.png)
