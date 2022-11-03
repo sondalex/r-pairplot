@@ -13,6 +13,12 @@ Each region can be mapped to a plot function or NULL.
 IF NULL, the element_blank() is assigned. 
 This way you can build triangle plots.
 
+# Installation
+
+```r
+devtools::install_github("sondalex/r-pairplot")
+```
+
 # Example
 
-![](figs/fig.png)
+![](man/figures/unnamed-chunk-1-1.png)
