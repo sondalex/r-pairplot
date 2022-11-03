@@ -1,0 +1,5 @@
+inst/doc
+renv/
+.Rprofile
+.Rbuildignore
+.venv/

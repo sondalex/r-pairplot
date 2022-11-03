@@ -1,0 +1,62 @@
+---
+title: "pairplot"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{pairplot}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Default settings
+
+```{r setup, fig.height=10, fig.width=10}
+library(pairplot)
+penguins_url <- "https://raw.githubusercontent.com/allisonhorst/palmerpenguins/main/inst/extdata/penguins.csv"
+columns <- c("bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g")
+penguins <- read.csv(penguins_url)[columns]
+penguins <- penguins[!apply(is.na(penguins), 1, any), ] # dropping NA
+
+pairgrid(
+         penguins,
+         map_lower=pair_geom_smooth,
+         map_diag=pair_geom_histogram,
+         map_upper=pair_geom_point
+)
+```
+
+## Legend text on all plots
+
+```{r fig.height=7, fig.width=7}
+pairgrid(
+         penguins,
+         map_lower=pair_geom_smooth,
+         map_diag=pair_geom_histogram,
+         map_upper=pair_geom_point,
+         repeat_text=TRUE
+)
+```
+
+# Playing with theme
+
+```{r}
+library(patchwork)
+library(ggplot2)
+pairgrid(
+         penguins,
+         map_lower=pair_geom_smooth,
+         map_diag=pair_geom_histogram,
+         map_upper=pair_geom_point,
+         repeat_text=TRUE
+) + plot_layout() & theme(plot.margin = margin(
+                            r = 0,
+                            l = 0.5
+                            )
+                          )
+```
