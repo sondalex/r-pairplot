@@ -154,5 +154,3 @@ pairgrid(
          text_on_diag=TRUE
 )
 ```
-
-
