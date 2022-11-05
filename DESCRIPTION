@@ -1,6 +1,6 @@
 Package: pairplot
 Title: A library for pairplots.
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: 
     person("Alexandre", "Sonderegger", , "dev@alexandresonderegger.ch", role = c("aut", "cre"),
            comment = c())

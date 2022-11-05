@@ -1,3 +1,45 @@
+#' @param i 
+#' @param n
+#' @return A named map: list(<subplot_index>=list(t=<int|NULL|>, b=<int|NULL|>, l=<int|NULL|>, r=<int|NULL|>)
+neighbour_indices <- function(i, n, filter=NULL) {
+  t <- i - n
+  b <- i + n
+  r <- i + 1
+  l <- i - 1
+  # replace by null values out of index.
+  # And filter based on user filter
+  if ((t < 1) || (!("t" %in% filter)) & (i != n^2)){
+    t = NULL
+  }
+  if ((b > n^2) || (!("b" %in% filter)) & (i != 1)){
+    b = NULL
+  }
+  if ((r > n^2) || (!("r" %in% filter)) & (i != 1)) {
+    r = NULL
+  }
+  if (l < 1 || !("l" %in% filter) & (i != n^2)) {
+    l = NULL
+  }
+  
+  neighbours = vector(mode="list")
+  neighbours[[as.character(i)]] = list(t=t, b=b, l=l, r=r)
+  return(neighbours)
+}
+
+#' @return A named map `list(<subplot_index>=list(t=<ggdata|NULL>, b=<ggdata|NULL>, l=<ggdata|NULL>, r=<ggdata|NULL>)`
+neighbour_data <- function(neighbour_pos, grobs){
+  keys=ls(neighbour_pos)
+  # values = unlist(neighbour_pos, use.names=F)
+  newlist = list()
+  for (key in keys){
+  if (!is.null(neighbour_pos[[key]])){
+    newlist[[key]] = ggplot_build(grobs[[neighbour_pos[[key]]]])
+  } else {
+    newlist[[key]] = NULL}
+  }
+  return(newlist)
+}
+
 #' @description Bin edges function based on 
 #' https://github.com/numpy/numpy/blob/664a9f5cad40e958c73d2bc78f9bcd5bd5f818e6/numpy/lib/histograms.py
 #' @param x A flat vector
@@ -84,16 +126,24 @@ add_modify_aes <- function(mapping, ...) {
 }
 
 # Operates on copy of list
+#' In order to to construct a full pair matrix. This function has to be called
+#' for each part (lower corner, upper corner, diagonal). The call on diagonal should be last
+#' in order to have access to neighbour subplots metadata.
 #' @param xlim_func See [pairgrid()] parameter `common_xlim` (equivalent).
-#' @param ylim_func A function to set y axis limits. If set in conjunction with `diag_share_ylim` set to TRUE.
-#' Plots on the ylimit, will have their ylim set in common.
+#' @param ylim_func A function to set y axis limits. If set in conjunction with `diag_share_ylim` set to TRUE,
+#' plots on the ylimit, will have their ylim set in common.
 #' @param diag_share_ylim If set to TRUE. Y axis limits will also use `ylim_func`, except for diagonal only pairplot. In this case, 
 #' will be normalized to unit length if the provided function implements unit scale normalization. See function
 #' [pair_geom_histogram] for an example.
+#' @param neighbours A map (named list) or `NULL`. 
+#' Map of the form: `subplot_index=list(t=<int|NULL>, b=<int|NULL>, l=<int|NULL>, r=<int|NULL>)`
+#' If not NULL, the function call
+#' `func()` will include the data in argument `neighbour_ggdata` from the neighbour(s): `func(neighbour_ggdata=list(t=ggplot_build(grobs_index[[t_index]])), etc.)`.
+#' There are no checks whether the selected grobs exist. Checks are reserved to function calling `mapplot`.
 #' @param check.overlap See[ggplot2::guide_axis()]
 #' @import ggplot2
 #' @import rlang
-mapplot <- function(data, mapping, pairs, grobs, indices, func, no_upper, no_lower, xlim_func=NULL, ylim_func=NULL, diag_share_ylim=TRUE, common_scale=NULL, check.overlap=TRUE, ...) {
+mapplot <- function(data, mapping, pairs, grobs, indices, func, no_upper, no_lower, xlim_func=NULL, ylim_func=NULL, diag_share_ylim=TRUE, common_scale=NULL, check.overlap=TRUE, neighbours=NULL, ...) {
   for (index in indices) {
     pair <- pairs[[index]]
     x <- pair[2]
@@ -111,8 +161,14 @@ mapplot <- function(data, mapping, pairs, grobs, indices, func, no_upper, no_low
         
         # If upper diagonal elements are NULL. Then 0-1 scale the diagonal.
         unit_y = ifelse(any(duplicated(pair)) & no_upper & no_lower, TRUE, FALSE)
-        p <- func(data, mapping = mapping, unit_y=unit_y)
-        if(length(xlim_func)) {
+        if (length(neighbours)){
+          current_neighbour_pos = neighbours[[as.character(index)]]
+          near_data=neighbour_data(neighbour_pos=current_neighbour_pos, grobs = grobs)
+          p <- func(data, mapping = mapping, unit_y=unit_y, neighbour_ggdata=near_data)
+        } else {
+          p <- func(data, mapping = mapping, unit_y=unit_y)
+        }
+        if(length(xlim_func) & diag_share_ylim) {
           xlim_pair <- xlim_func(data=data, x=x)
         } else{
           xlim_pair <- NULL
@@ -175,6 +231,14 @@ global_ylim <- function(data, y) {
 #' @param diag_share_ylim See [mapplot()] for explanations.
 #' @param common_scale A function for applying a common scale across all subplots.
 #' @param repeat_text Boolean indicating whether the text (digits) should be set on all subplots. If FALSE, only the left and bottom contigous plots have text set.
+#' @param text_on_diag Whether to apply text on diagonal. 
+#' This argument applies only if one or more of the corners
+#' have plots.
+#' @param diag_neighbour A character vector c("t", "b", "l", "r"). If specified, 
+#' the data from selected neighbour data is
+#' passed to map_diag, functions. When specified the subplots 
+#' on top-left and bottom-right corner will always return 
+#' their neighbours data.
 #' @param ... Arguments passed to [mapplot()]
 #'
 #' @details Details 
@@ -199,7 +263,7 @@ global_ylim <- function(data, y) {
 #' @export
 #' @import ggplot2
 #' @import patchwork
-pairgrid <- function(data, mapping=NULL, map_lower, map_diag, map_upper, common_xlim=global_xlim, common_ylim=global_ylim, diag_share_ylim=TRUE, common_scale=scales::label_number(accuracy=1), repeat_labels=FALSE, repeat_text=FALSE, top=NULL, bottom=NULL, left=NULL, right=NULL, check.overlap=TRUE, ...) {
+pairgrid <- function(data, mapping=NULL, map_lower, map_diag, map_upper, common_xlim=global_xlim, common_ylim=global_ylim, diag_share_ylim=TRUE, common_scale=scales::label_number(accuracy=1), repeat_labels=FALSE, repeat_text=FALSE, check.overlap=TRUE, diag_neighbour=NULL, text_on_diag=T, ...) {
   size <- ncol(data)
   ncol <- size
   nrow <- ncol
@@ -218,22 +282,32 @@ pairgrid <- function(data, mapping=NULL, map_lower, map_diag, map_upper, common_
   no_lower = is.null(map_lower)
   grobs <- vector(mode="list", length=len) # init
   
+  if (length(diag_neighbour)) {
+    if (any(!(diag_neighbour %in% c("t", "l", "b", "r")))) {
+      stop(
+        paste0("Characters must be in c('t', 'b', 'l', 'r')): ")
+      )
+    }
+    # data should be accessible via 
+    # neighbour_ggdata$t, neighbour_ggdata$b, 
+    # neighbour_ggdata$l, neighbour_ggdata$r
+    # accessible via t, b, l, r.
+    map_neighbours = sapply(diag_index, function(i){
+      neighbour_indices(i, n=size, filter=diag_neighbour)
+      }
+    )
+  } else {
+    map_neighbours = NULL
+  }
+  
+
   grobs <- mapplot(
                    data, pairs=rows_col_pairs, grobs=grobs,
                    indices=lower_index, mapping = mapping,
                    func=map_lower, xlim_func = common_xlim,
                    ylim_func=common_ylim, diag_share_ylim=diag_share_ylim,
                    common_scale=common_scale, no_upper=no_upper, no_lower=no_lower,
-                   check.overlap=check.overlap,
-                   ...
-                   )
-  grobs <- mapplot(
-                   data, pairs=rows_col_pairs, grobs=grobs,
-                   indices=diag_index, mapping=mapping, func=map_diag,
-                   xlim_func = common_xlim, ylim_func=common_ylim,
-                   diag_share_ylim=diag_share_ylim,
-                   common_scale=common_scale, no_upper=no_upper, no_lower=no_lower,
-                   check.overlap=check.overlap,
+                   check.overlap=check.overlap, neighbour=NULL,
                    ...
                    )
   grobs <- mapplot(
@@ -243,7 +317,16 @@ pairgrid <- function(data, mapping=NULL, map_lower, map_diag, map_upper, common_
                    diag_share_ylim=diag_share_ylim,
                    common_scale=common_scale,
                    no_upper=no_upper, no_lower=no_lower,
-                   check.overlap=check.overlap,
+                   check.overlap=check.overlap, neighbour=NULL,
+                   ...
+                   )
+  grobs <- mapplot(
+                   data, pairs=rows_col_pairs, grobs=grobs,
+                   indices=diag_index, mapping=mapping, func=map_diag,
+                   xlim_func = common_xlim, ylim_func=common_ylim,
+                   diag_share_ylim=diag_share_ylim,
+                   common_scale=common_scale, no_upper=no_upper, no_lower=no_lower,
+                   check.overlap=check.overlap, neighbour=map_neighbours,
                    ...
                    )
   
@@ -256,7 +339,8 @@ pairgrid <- function(data, mapping=NULL, map_lower, map_diag, map_upper, common_
   for (index in seq_along(grobs)) {
     contigous_l <- index %in% left_contigous
     contigous_b <- index %in% bottom_contigous
-    theme_i <- configure_theme(repeat_labels = repeat_labels, repeat_text = repeat_text, contigous_l = contigous_l, contigous_b = contigous_b)
+    on_diag <- ifelse(index %in% diag_index, TRUE, FALSE)
+    theme_i <- configure_theme(repeat_labels = repeat_labels, repeat_text = repeat_text, contigous_l = contigous_l, contigous_b = contigous_b, on_diag=on_diag, text_on_diag=text_on_diag)
     grobs[[index]] <- grobs[[index]] + theme_i
   }
   return(patchwork::wrap_plots(grobs, ncol=ncol, nrow=nrow, byrow=T))
@@ -265,18 +349,20 @@ pairgrid <- function(data, mapping=NULL, map_lower, map_diag, map_upper, common_
 #' Set theme programatically conditional on arguments.
 #' @param repeat_label See [pairgrid()]
 #' @param repeat_text See [pairgrid()]
+#' @param text_on_diag See [pairgrid()]
 #' @param contigous_l A boolean indicating whether subplot is contigous to the left side.
 #' @param contigous_b A boolean indicating whether subplot is contigous to the bottom.
-configure_theme <- function(repeat_labels, repeat_text, contigous_l, contigous_b) {
+#' @param on_diag A boolean indicating whether the subplot is on diagonal.
+configure_theme <- function(repeat_labels, repeat_text, text_on_diag, contigous_l, contigous_b, on_diag) {
   general_theme <- theme_get()
-
+  diag = text_on_diag & on_diag # whether effective on diag
   # I used switch in the past. It led to bug where NULL would be returned in some cases.
   axis.title.x <- if((!repeat_labels) & (!contigous_b)) element_blank() else{general_theme$axis.title.x}
   axis.title.y <- if((!repeat_labels) & (!contigous_l)) element_blank() else{general_theme$axis.title.y} 
-  axis.text.x <- if((!repeat_text) & (!contigous_b)) element_blank() else{general_theme$axis.text.x}
-  axis.text.y <- if((!repeat_text) & (!contigous_l)) element_blank() else{general_theme$axis.text.y}
-  axis.ticks.x <- if((!repeat_text) & (!contigous_b)) element_blank() else{general_theme$axis.ticks.x}
-  axis.ticks.y <- if((!repeat_text) & (!contigous_l)) element_blank() else{general_theme$axis.ticks.y}
+  axis.text.x <- if((!repeat_text) & (!contigous_b) & (!diag)) element_blank() else{general_theme$axis.text.x}
+  axis.text.y <- if((!repeat_text) & (!contigous_l) & (!diag)) element_blank() else{general_theme$axis.text.y}
+  axis.ticks.x <- if((!repeat_text) & (!contigous_b) & (!diag)) element_blank() else{general_theme$axis.ticks.x}
+  axis.ticks.y <- if((!repeat_text) & (!contigous_l) & (!diag)) element_blank() else{general_theme$axis.ticks.y}
   return(
     theme(
       axis.title.x = axis.title.x, axis.title.y=axis.title.y,
@@ -312,19 +398,55 @@ pair_geom_point <- function(data, mapping, ...) {
   return(p)
 }
 
+#' @x A vector
+min_max_scale <- function(x, a, b) {
+  (b - a) * ((x - min(x)) / (max(x) - min(x))) + a
+}
+
 
 #' Min max histogram
-#' @param unit_y Whether to scale y (min-max) to interval $[0, 1]$. If FALSE, min-max occurs but interval is set to $[min(y), max(y)]$, 
+#' @param unit_y Whether to scale y (min-max) to interval [0, 1].
+#' @param min_max A function for transforming the data.
+#' Those values are used as boundaries. If only x or y is provided. Scaling is done on one dimension only.
+#' for min max scaling.
 #' @export
-pair_geom_histogram <- function(data, mapping, unit_y=FALSE, stat="bin", bins=10, binwidth=function(x) {bin_width_auto(x, na.rm=TRUE)}, ...) {
+pair_geom_histogram <- function(data, mapping, neighbour_ggdata=NULL, unit_y=FALSE, stat="bin", bins=10, binwidth=function(x) {bin_width_auto(x, na.rm=TRUE)}, ...) {
   bin_width_value <- binwidth(data[[1]])
-  p <- ggplot(data = data, mapping = mapping)
   if (unit_y) {
-    p <- p + geom_histogram(aes(y=..ncount..), stat=stat, bins=bins, binwidth=binwidth, ...)
+    p <- ggplot(data = data, mapping = mapping) + geom_histogram(aes(y=..ncount..), stat=stat, bins=bins, binwidth=binwidth, ...)
   } else {
     # p <- p + geom_histogram(aes(y=after_stat(density / max(density, na.rm=T) * (max(x, na.rm=T) - min(x, na.rm=T) + min(x, na.rm=T))) , stat=stat, bins=bins, binwidth=binwidth, ...)
-    p <- p + geom_histogram(aes(y=after_stat((max(x) - min(x)) * ((count) / (max(count) - min(count))) + min(x))) , stat=stat, bins=bins, binwidth=binwidth, ...)
+    if (length(neighbour_ggdata)){
+        for (key in c("t", "b")) {
+          xdata = neighbour_ggdata[[key]]
+          if (length(xdata)){
+            break
+          }
+        }
+        for (key in c("l", "r")) {
+          ydata = neighbour_ggdata[[key]]
+          if (length(ydata)){
+            break
+          }
+        }
+        # get first non null for y and x axis.
+        xaxis_bounds <- xdata$layout$panel_scales_x[[1]]$range$range
+        yaxis_bounds <- ydata$layout$panel_scales_y[[1]]$range$range
+        
+        lower_bound_y <- yaxis_bounds[1]
+        upper_bound_y <- yaxis_bounds[2]
+        lower_bound_x = xaxis_bounds[1]
+        upper_bound_x = xaxis_bounds[2]
+        x = rlang::as_name(mapping$x)
+        t_data = min_max_scale(data[x], lower_bound_x, upper_bound_x)
+        p <- ggplot(data = t_data, mapping = mapping)
+        # min max-scale a first time. Such that the x-axis is scaled.
+    } else {
+      p <- ggplot(data = data, mapping = mapping)
+      upper_bound_y <- max(data[rlang::as_name(mapping$x)])
+      lower_bound_y <- min(data[rlang::as_name(mapping$x)]) 
+    }
+    p <- p + geom_histogram(aes(y=after_stat((upper_bound_y - lower_bound_y) * ((count - min(count)) / (max(count) - min(count))) + lower_bound_y)), stat=stat, bins=bins, binwidth=binwidth, ...)
   }
   return(p)
 }
-

@@ -4,14 +4,25 @@
 \alias{configure_theme}
 \title{Set theme programatically conditional on arguments.}
 \usage{
-configure_theme(repeat_labels, repeat_text, contigous_l, contigous_b)
+configure_theme(
+  repeat_labels,
+  repeat_text,
+  text_on_diag,
+  contigous_l,
+  contigous_b,
+  on_diag
+)
 }
 \arguments{
 \item{repeat_text}{See \code{\link[=pairgrid]{pairgrid()}}}
 
+\item{text_on_diag}{See \code{\link[=pairgrid]{pairgrid()}}}
+
 \item{contigous_l}{A boolean indicating whether subplot is contigous to the left side.}
 
 \item{contigous_b}{A boolean indicating whether subplot is contigous to the bottom.}
+
+\item{on_diag}{A boolean indicating whether the subplot is on diagonal.}
 
 \item{repeat_label}{See \code{\link[=pairgrid]{pairgrid()}}}
 }

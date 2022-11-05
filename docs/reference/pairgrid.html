@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">pairplot</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -28,6 +28,7 @@
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="../articles/composing.html">Composing</a>
+    <a class="dropdown-item" href="../articles/diagonal.html">Diagonal</a>
   </div>
 </li>
 <li class="nav-item">
@@ -66,11 +67,9 @@
 <span>  common_scale <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/label_number.html" class="external-link">label_number</a></span><span class="op">(</span>accuracy <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  repeat_labels <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  repeat_text <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  top <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  bottom <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  left <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  right <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  check.overlap <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  diag_neighbour <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  text_on_diag <span class="op">=</span> <span class="cn">T</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -98,7 +97,7 @@
 
 
 <dt>diag_share_ylim</dt>
-<dd><p>See <code>mapplot()</code> for explanations.</p></dd>
+<dd><p>See <code><a href="mapplot.html">mapplot()</a></code> for explanations.</p></dd>
 
 
 <dt>common_scale</dt>
@@ -109,8 +108,22 @@
 <dd><p>Boolean indicating whether the text (digits) should be set on all subplots. If FALSE, only the left and bottom contigous plots have text set.</p></dd>
 
 
+<dt>diag_neighbour</dt>
+<dd><p>A character vector c("t", "b", "l", "r"). If specified,
+the data from selected neighbour data is
+passed to map_diag, functions. When specified the subplots
+on top-left and bottom-right corner will always return
+their neighbours data.</p></dd>
+
+
+<dt>text_on_diag</dt>
+<dd><p>Whether to apply text on diagonal.
+This argument applies only if one or more of the corners
+have plots.</p></dd>
+
+
 <dt>...</dt>
-<dd><p>Arguments passed to <code>mapplot()</code></p></dd>
+<dd><p>Arguments passed to <code><a href="mapplot.html">mapplot()</a></code></p></dd>
 
 
 <dt>size</dt>

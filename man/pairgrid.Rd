@@ -16,11 +16,9 @@ pairgrid(
   common_scale = scales::label_number(accuracy = 1),
   repeat_labels = FALSE,
   repeat_text = FALSE,
-  top = NULL,
-  bottom = NULL,
-  left = NULL,
-  right = NULL,
   check.overlap = TRUE,
+  diag_neighbour = NULL,
+  text_on_diag = T,
   ...
 )
 }
@@ -40,6 +38,16 @@ pairgrid(
 \item{common_scale}{A function for applying a common scale across all subplots.}
 
 \item{repeat_text}{Boolean indicating whether the text (digits) should be set on all subplots. If FALSE, only the left and bottom contigous plots have text set.}
+
+\item{diag_neighbour}{A character vector c("t", "b", "l", "r"). If specified,
+the data from selected neighbour data is
+passed to map_diag, functions. When specified the subplots
+on top-left and bottom-right corner will always return
+their neighbours data.}
+
+\item{text_on_diag}{Whether to apply text on diagonal.
+This argument applies only if one or more of the corners
+have plots.}
 
 \item{...}{Arguments passed to \code{\link[=mapplot]{mapplot()}}}
 

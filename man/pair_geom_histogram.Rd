@@ -7,6 +7,7 @@
 pair_geom_histogram(
   data,
   mapping,
+  neighbour_ggdata = NULL,
   unit_y = FALSE,
   stat = "bin",
   bins = 10,
@@ -17,7 +18,11 @@ pair_geom_histogram(
 )
 }
 \arguments{
-\item{unit_y}{Whether to scale y (min-max) to interval $\link{0, 1}$. If FALSE, min-max occurs but interval is set to $\link{min(y), max(y)}$,}
+\item{unit_y}{Whether to scale y (min-max) to interval \link{0, 1}.}
+
+\item{min_max}{A function for transforming the data.
+Those values are used as boundaries. If only x or y is provided. Scaling is done on one dimension only.
+for min max scaling.}
 }
 \description{
 Min max histogram

@@ -3,3 +3,4 @@ renv/
 .Rprofile
 .Rbuildignore
 .venv/
+.vscode/
