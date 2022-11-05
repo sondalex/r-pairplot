@@ -3,7 +3,7 @@
 ## Changes
 * `diag_share_ylim` is deprecated in favor of `diag_share_lim`.
 * Remove pairgrid unused arguments.
-* Add possible knowledge of surrounding subplots for diagonal plots.
+* Add possible knowledge of surrounding subplots for diagonal subplots. Works also with corner plot.
 
 ## Bug Fixes
 

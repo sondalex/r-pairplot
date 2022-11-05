@@ -68,10 +68,10 @@ columns <- c("bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_
 penguins <- read.csv(penguins_url)[columns]
 penguins <- penguins[!apply(is.na(penguins), 1, any), ] # dropping NA
 
-pair_geom_rank_smooth <- function(data, mapping, ...) {
+pair_geom_rank_smooth <- function(data, mapping, formula=y~x, method="loess", ...) {
   p <- ggplot(data = data, mapping = mapping) + 
       geom_point_rank() + 
-      geom_smooth_rank(...)
+      geom_smooth_rank(formula = formula, method=method, ...)
   return(p)
 }
 
@@ -152,5 +152,22 @@ pairgrid(
            return(c(min(rank(data[y])), max(rank(data[y]))))
          }, diag_share_lim=FALSE, 
          text_on_diag=TRUE
+)
+```
+
+```{r}
+pairgrid( 
+         penguins,
+         map_lower=pair_geom_rank_smooth,
+         map_diag=pair_geom_histogram,
+         map_upper=NULL,
+         diag_share_lim=F, repeat_text=T,
+         common_xlim=function(data, x){
+           return(c(min(rank(data[x])), max(rank(data[x]))))
+         },
+         common_ylim=function(data, y){
+           return(c(min(rank(data[y])), max(rank(data[y]))))
+         },
+        diag_neighbour=c("l", "b", "t", "r")
 )
 ```
