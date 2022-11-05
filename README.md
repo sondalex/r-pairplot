@@ -29,6 +29,6 @@ The API is likely to change rapidly.
 # Remarks
 
 Currently, `pairplot` has **no unit-test implemented**.
-It is likely that there exit underlying bugs.
+It is likely that there exist underlying bugs.
 If you catch one, opening an issue and/or proposing a pull request
-would be of huge help.
+would be really helpful.
