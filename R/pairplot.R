@@ -1,23 +1,23 @@
 #' @param i 
 #' @param n
 #' @return A named map: list(<subplot_index>=list(t=<int|NULL|>, b=<int|NULL|>, l=<int|NULL|>, r=<int|NULL|>)
-neighbour_indices <- function(i, n, filter=NULL) {
+neighbour_indices <- function(i, n, filter=NULL, upper_corner, lower_corner) {
   t <- i - n
   b <- i + n
   r <- i + 1
   l <- i - 1
   # replace by null values out of index.
   # And filter based on user filter
-  if ((t < 1) || (!("t" %in% filter)) & (i != n^2)){
+  if ((t < 1) || ((!("t" %in% filter)) & (i != n^2)) || (!upper_corner)){
     t = NULL
   }
-  if ((b > n^2) || (!("b" %in% filter)) & (i != 1)){
+  if ((b > n^2) || ((!("b" %in% filter)) & (i != 1)) || (!lower_corner)){
     b = NULL
   }
-  if ((r > n^2) || (!("r" %in% filter)) & (i != 1)) {
+  if ((r > n^2) || ((!("r" %in% filter)) & (i != 1)) || (!upper_corner)) {
     r = NULL
   }
-  if (l < 1 || !("l" %in% filter) & (i != n^2)) {
+  if (l < 1 || (!("l" %in% filter) & (i != n^2)) || (!lower_corner)) {
     l = NULL
   }
   
@@ -304,8 +304,9 @@ pairgrid <- function(data, mapping=NULL, map_lower, map_diag, map_upper, common_
     # neighbour_ggdata$t, neighbour_ggdata$b, 
     # neighbour_ggdata$l, neighbour_ggdata$r
     # accessible via t, b, l, r.
+    
     map_neighbours = sapply(diag_index, function(i){
-      neighbour_indices(i, n=size, filter=diag_neighbour)
+      neighbour_indices(i, n=size, filter=diag_neighbour, lower_corner=!is.null(map_lower), upper_corner=!is.null(map_upper))
       }
     )
   } else {
@@ -426,6 +427,7 @@ min_max_scale <- function(x, a, b) {
 #' @export
 pair_geom_histogram <- function(data, mapping, neighbour_ggdata=NULL, unit_y=FALSE, stat="bin", bins=10, binwidth=function(x) {bin_width_auto(x, na.rm=TRUE)}, ...) {
   bin_width_value <- binwidth(data[[1]])
+  x = rlang::as_name(mapping$x)
   if (unit_y) {
     p <- ggplot(data = data, mapping = mapping) + geom_histogram(aes(y=..ncount..), stat=stat, bins=bins, binwidth=binwidth, ...)
   } else {
@@ -443,24 +445,49 @@ pair_geom_histogram <- function(data, mapping, neighbour_ggdata=NULL, unit_y=FAL
             break
           }
         }
-        # get first non null for y and x axis.
-        xaxis_bounds <- xdata$layout$panel_scales_x[[1]]$range$range
-        yaxis_bounds <- ydata$layout$panel_scales_y[[1]]$range$range
+        
+        # Two corner case
+        # 1)
+        # 1 NA NA 
+        # 1  1 NA
+        # 1  1  1
+
+        # --> TL has ydata NULL and xdata existing 
+        # --> BR has ydata existing, but xdata NULL
+
+        # 2)
+        # 1  1  1
+        # NA 1  1
+        # NA NA 1
+        
+        # --> TL has ydata existing, but xdata not existing.
+        # --> BR has ydata NULL but xdata existing.
+        
+        # The bounds for axis which does not share a neighbour
+        # are set to the minimum of the data.
+
+        # Combination of upper_corner and lower corner have to be considered
+        # for the top left and bottom right graphic.
+        # get first non-null for y and x axis.
+        
+        xaxis_bounds <- if(length(xdata)) xdata$layout$panel_scales_x[[1]]$range$range else {c(min(data[x]), max(data[x]))}
+        yaxis_bounds <- if(length(ydata)) ydata$layout$panel_scales_y[[1]]$range$range else {c(min(data[x]), max(data[x]))}
         
         lower_bound_y <- yaxis_bounds[1]
         upper_bound_y <- yaxis_bounds[2]
-        lower_bound_x = xaxis_bounds[1]
-        upper_bound_x = xaxis_bounds[2]
-        x = rlang::as_name(mapping$x)
+        lower_bound_x <- xaxis_bounds[1]
+        upper_bound_x <- xaxis_bounds[2]
+        
         t_data = min_max_scale(data[x], lower_bound_x, upper_bound_x)
         p <- ggplot(data = t_data, mapping = mapping)
         # min max-scale a first time. Such that the x-axis is scaled.
     } else {
       p <- ggplot(data = data, mapping = mapping)
-      upper_bound_y <- max(data[rlang::as_name(mapping$x)])
-      lower_bound_y <- min(data[rlang::as_name(mapping$x)]) 
+      upper_bound_y <- max(data[x])
+      lower_bound_y <- min(data[x]) 
     }
     p <- p + geom_histogram(aes(y=after_stat((upper_bound_y - lower_bound_y) * ((count - min(count)) / (max(count) - min(count))) + lower_bound_y)), stat=stat, bins=bins, binwidth=binwidth, ...)
   }
+
   return(p)
 }

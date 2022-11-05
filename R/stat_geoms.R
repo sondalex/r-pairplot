@@ -31,7 +31,7 @@ geom_smooth_rank <- function(mapping = NULL, data = NULL, stat = "smooth_rank", 
     orientation = NA, show.legend = NA, inherit.aes = TRUE) {
     params <- list(na.rm = na.rm, orientation = orientation, 
         se = se, ...)
-    if (identical(stat, "smooth")) {
+    if (identical(stat, "smooth_rank")) {
         params$method <- method
         params$formula <- formula
     }

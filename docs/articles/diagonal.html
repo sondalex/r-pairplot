@@ -92,6 +92,7 @@
 <span><span class="co">#&gt;     }, ...) </span></span>
 <span><span class="co">#&gt; {</span></span>
 <span><span class="co">#&gt;     bin_width_value &lt;- binwidth(data[[1]])</span></span>
+<span><span class="co">#&gt;     x = rlang::as_name(mapping$x)</span></span>
 <span><span class="co">#&gt;     if (unit_y) {</span></span>
 <span><span class="co">#&gt;         p &lt;- ggplot(data = data, mapping = mapping) + geom_histogram(aes(y = ..ncount..), </span></span>
 <span><span class="co">#&gt;             stat = stat, bins = bins, binwidth = binwidth, ...)</span></span>
@@ -110,20 +111,27 @@
 <span><span class="co">#&gt;                   break</span></span>
 <span><span class="co">#&gt;                 }</span></span>
 <span><span class="co">#&gt;             }</span></span>
-<span><span class="co">#&gt;             xaxis_bounds &lt;- xdata$layout$panel_scales_x[[1]]$range$range</span></span>
-<span><span class="co">#&gt;             yaxis_bounds &lt;- ydata$layout$panel_scales_y[[1]]$range$range</span></span>
+<span><span class="co">#&gt;             xaxis_bounds &lt;- if (length(xdata)) </span></span>
+<span><span class="co">#&gt;                 xdata$layout$panel_scales_x[[1]]$range$range</span></span>
+<span><span class="co">#&gt;             else {</span></span>
+<span><span class="co">#&gt;                 c(min(data[x]), max(data[x]))</span></span>
+<span><span class="co">#&gt;             }</span></span>
+<span><span class="co">#&gt;             yaxis_bounds &lt;- if (length(ydata)) </span></span>
+<span><span class="co">#&gt;                 ydata$layout$panel_scales_y[[1]]$range$range</span></span>
+<span><span class="co">#&gt;             else {</span></span>
+<span><span class="co">#&gt;                 c(min(data[x]), max(data[x]))</span></span>
+<span><span class="co">#&gt;             }</span></span>
 <span><span class="co">#&gt;             lower_bound_y &lt;- yaxis_bounds[1]</span></span>
 <span><span class="co">#&gt;             upper_bound_y &lt;- yaxis_bounds[2]</span></span>
-<span><span class="co">#&gt;             lower_bound_x = xaxis_bounds[1]</span></span>
-<span><span class="co">#&gt;             upper_bound_x = xaxis_bounds[2]</span></span>
-<span><span class="co">#&gt;             x = rlang::as_name(mapping$x)</span></span>
+<span><span class="co">#&gt;             lower_bound_x &lt;- xaxis_bounds[1]</span></span>
+<span><span class="co">#&gt;             upper_bound_x &lt;- xaxis_bounds[2]</span></span>
 <span><span class="co">#&gt;             t_data = min_max_scale(data[x], lower_bound_x, upper_bound_x)</span></span>
 <span><span class="co">#&gt;             p &lt;- ggplot(data = t_data, mapping = mapping)</span></span>
 <span><span class="co">#&gt;         }</span></span>
 <span><span class="co">#&gt;         else {</span></span>
 <span><span class="co">#&gt;             p &lt;- ggplot(data = data, mapping = mapping)</span></span>
-<span><span class="co">#&gt;             upper_bound_y &lt;- max(data[rlang::as_name(mapping$x)])</span></span>
-<span><span class="co">#&gt;             lower_bound_y &lt;- min(data[rlang::as_name(mapping$x)])</span></span>
+<span><span class="co">#&gt;             upper_bound_y &lt;- max(data[x])</span></span>
+<span><span class="co">#&gt;             lower_bound_y &lt;- min(data[x])</span></span>
 <span><span class="co">#&gt;         }</span></span>
 <span><span class="co">#&gt;         p &lt;- p + geom_histogram(aes(y = after_stat((upper_bound_y - </span></span>
 <span><span class="co">#&gt;             lower_bound_y) * ((count - min(count))/(max(count) - </span></span>
@@ -132,7 +140,7 @@
 <span><span class="co">#&gt;     }</span></span>
 <span><span class="co">#&gt;     return(p)</span></span>
 <span><span class="co">#&gt; }</span></span>
-<span><span class="co">#&gt; &lt;bytecode: 0x55df2323a990&gt;</span></span>
+<span><span class="co">#&gt; &lt;bytecode: 0x55571981e5c8&gt;</span></span>
 <span><span class="co">#&gt; &lt;environment: namespace:pairplot&gt;</span></span></code></pre></div>
 <p>Now, let’s see what happens when we do not use this feature. We compute the scatter and geom smooth of rank transformed variable. We use internal functions <code>geom_point_rank()</code> &amp; <code>geom_smooth_rank()</code> to compute the lower corner plots.</p>
 <p>:</p>
@@ -143,15 +151,14 @@
 <span><span class="va">penguins</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="va">penguins_url</span><span class="op">)</span><span class="op">[</span><span class="va">columns</span><span class="op">]</span></span>
 <span><span class="va">penguins</span> <span class="op">&lt;-</span> <span class="va">penguins</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">penguins</span><span class="op">)</span>, <span class="fl">1</span>, <span class="va">any</span><span class="op">)</span>, <span class="op">]</span> <span class="co"># dropping NA</span></span>
 <span></span>
-<span><span class="va">pair_geom_rank_smooth</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">mapping</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
+<span><span class="va">pair_geom_rank_smooth</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">mapping</span>, <span class="va">formula</span><span class="op">=</span><span class="va">y</span><span class="op">~</span><span class="va">x</span>, <span class="va">method</span><span class="op">=</span><span class="st">"loess"</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">data</span>, mapping <span class="op">=</span> <span class="va">mapping</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>      <span class="fu">geom_point_rank</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>      <span class="fu">geom_smooth_rank</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
+<span>      <span class="fu">geom_smooth_rank</span><span class="op">(</span>formula <span class="op">=</span> <span class="va">formula</span>, method<span class="op">=</span><span class="va">method</span>, <span class="va">...</span><span class="op">)</span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
-<span><span class="fu">pair_geom_rank_smooth</span><span class="op">(</span><span class="va">penguins</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">flipper_length_mm</span>, y<span class="op">=</span><span class="va">body_mass_g</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span></code></pre></div>
+<span><span class="fu">pair_geom_rank_smooth</span><span class="op">(</span><span class="va">penguins</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">flipper_length_mm</span>, y<span class="op">=</span><span class="va">body_mass_g</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="diagonal_files/figure-html/unnamed-chunk-3-1.png" width="672"></p>
 <p>On the pairgrid down below we see that histogram are not in proportion.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
@@ -169,13 +176,7 @@
 <span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
 <span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
 <span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
-<span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span></code></pre></div>
+<span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span></code></pre></div>
 <p><img src="diagonal_files/figure-html/unnamed-chunk-4-1.png" width="672"></p>
 <p>Down below, we leverage the surrounding information and min max scale the data on the x-axis and y-axis with respect to surroundings.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
@@ -205,31 +206,7 @@
 <span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
 <span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
 <span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
-<span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span></code></pre></div>
+<span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span></code></pre></div>
 <p><img src="diagonal_files/figure-html/unnamed-chunk-5-1.png" width="672"></p>
 <p>The down-side of the double min max scaling is interpretation which can be misleading. A note might be useful:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -257,31 +234,7 @@
 <span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
 <span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
 <span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
-<span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span></code></pre></div>
+<span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span></code></pre></div>
 <p><img src="diagonal_files/figure-html/unnamed-chunk-6-1.png" width="672"></p>
 <p>Another option for visualizing this kind of data without min max scaling is to allow misalignment of limits on diagonal only and display the text on the diagonal and border contigous subplots. Four arguments have to be specified, <code>common_xlim=&lt;func&gt;</code>, <code>common_ylim=&lt;func&gt;</code>, <code>diag_share_lim=FALSE</code>, <code>text_on_diag=TRUE</code>.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
@@ -309,20 +262,30 @@
 <span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
 <span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
 <span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
-<span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula 'y ~ x'</span></span></code></pre></div>
+<span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span></code></pre></div>
 <p><img src="diagonal_files/figure-html/unnamed-chunk-7-1.png" width="672"></p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pairgrid.html">pairgrid</a></span><span class="op">(</span> </span>
+<span>         <span class="va">penguins</span>,</span>
+<span>         map_lower<span class="op">=</span><span class="va">pair_geom_rank_smooth</span>,</span>
+<span>         map_diag<span class="op">=</span><span class="va">pair_geom_histogram</span>,</span>
+<span>         map_upper<span class="op">=</span><span class="cn">NULL</span>,</span>
+<span>         diag_share_lim<span class="op">=</span><span class="cn">F</span>, repeat_text<span class="op">=</span><span class="cn">T</span>,</span>
+<span>         common_xlim<span class="op">=</span><span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">x</span><span class="op">)</span><span class="op">{</span></span>
+<span>           <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rank.html" class="external-link">rank</a></span><span class="op">(</span><span class="va">data</span><span class="op">[</span><span class="va">x</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rank.html" class="external-link">rank</a></span><span class="op">(</span><span class="va">data</span><span class="op">[</span><span class="va">x</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>         <span class="op">}</span>,</span>
+<span>         common_ylim<span class="op">=</span><span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">y</span><span class="op">)</span><span class="op">{</span></span>
+<span>           <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rank.html" class="external-link">rank</a></span><span class="op">(</span><span class="va">data</span><span class="op">[</span><span class="va">y</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rank.html" class="external-link">rank</a></span><span class="op">(</span><span class="va">data</span><span class="op">[</span><span class="va">y</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>         <span class="op">}</span>,</span>
+<span>        diag_neighbour<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"l"</span>, <span class="st">"b"</span>, <span class="st">"t"</span>, <span class="st">"r"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: Ignoring unknown parameters: unit_y</span></span>
+<span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
+<span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
+<span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
+<span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span>
+<span><span class="co">#&gt; Ignoring unknown parameters: unit_y</span></span></code></pre></div>
+<p><img src="diagonal_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
 </div>
   </main>
 </div>
