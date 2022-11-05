@@ -61,7 +61,7 @@ We use internal functions `geom_point_rank()` & `geom_smooth_rank()` to compute 
 
 :
 
-```{r}
+```{r, fig.height=7, fig.width=7}
 library(ggplot2)
 penguins_url <- "https://raw.githubusercontent.com/allisonhorst/palmerpenguins/main/inst/extdata/penguins.csv"
 columns <- c("bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g")
@@ -80,13 +80,13 @@ pair_geom_rank_smooth(penguins, aes(x=flipper_length_mm, y=body_mass_g))
 
 On the pairgrid down below we see that histogram are not in proportion.
 
-```{r}
+```{r, fig.height=7, fig.width=7}
 pairgrid(
          penguins,
          map_lower=pair_geom_rank_smooth,
          map_diag=pair_geom_histogram,
          map_upper=NULL,
-         diag_share_ylim=T, repeat_text=T,
+         diag_share_lim=T, repeat_text=T,
          common_ylim=function(data, y){return(c(min(rank(data[y])), max(rank(data[y]))))},
          common_xlim=function(data, x){return(c(min(rank(data[x])), max(rank(data[x]))))}
 )
@@ -96,14 +96,14 @@ Down below, we leverage the surrounding information and min
 max scale the data on the x-axis and y-axis with 
 respect to surroundings.
 
-```{r}
+```{r, fig.height=7, fig.width=7}
 
 pairgrid(
          penguins,
          map_lower=pair_geom_rank_smooth,
          map_diag=pair_geom_histogram,
          map_upper=pair_geom_rank_smooth,
-         diag_share_ylim=T, repeat_text=T,
+         diag_share_lim=T, repeat_text=T,
          common_xlim=function(data, x){
            return(c(min(rank(data[x])), max(rank(data[x]))))
          },
@@ -117,7 +117,7 @@ pairgrid(
 The down-side of the double min max scaling is interpretation which can be
 misleading. A note might be useful:
 
-```{r}
+```{r, fig.height=7, fig.width=7}
 pairgrid(
          penguins,
          map_lower=pair_geom_rank_smooth,
@@ -137,9 +137,9 @@ Another option for visualizing this kind of data without
 min max scaling is to allow misalignment of limits on diagonal only
 and display the text on the diagonal and border contigous subplots.
 Four arguments have to be specified, `common_xlim=<func>`, `common_ylim=<func>`,
-`diag_share_ylim=FALSE`, `text_on_diag=TRUE`.
+`diag_share_lim=FALSE`, `text_on_diag=TRUE`.
 
-```{r}
+```{r, fig.height=7, fig.width=7}
 pairgrid(
          penguins,
          map_lower=pair_geom_rank_smooth,
@@ -150,7 +150,7 @@ pairgrid(
          },
          common_ylim=function(data, y){
            return(c(min(rank(data[y])), max(rank(data[y]))))
-         }, diag_share_ylim=FALSE, 
+         }, diag_share_lim=FALSE, 
          text_on_diag=TRUE
 )
 ```

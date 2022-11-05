@@ -12,13 +12,15 @@ pairgrid(
   map_upper,
   common_xlim = global_xlim,
   common_ylim = global_ylim,
-  diag_share_ylim = TRUE,
+  diag_share_lim = TRUE,
   common_scale = scales::label_number(accuracy = 1),
   repeat_labels = FALSE,
   repeat_text = FALSE,
   check.overlap = TRUE,
   diag_neighbour = NULL,
   text_on_diag = T,
+  diag_share_ylim = NULL,
+  scale_diag_plot = FALSE,
   ...
 )
 }
@@ -33,7 +35,7 @@ pairgrid(
 
 \item{common_xlim}{Accepts a function which returns a pair of limit. By default uses \code{\link[=global_xlim]{global_xlim()}}}
 
-\item{diag_share_ylim}{See \code{\link[=mapplot]{mapplot()}} for explanations.}
+\item{diag_share_lim}{See \code{\link[=mapplot]{mapplot()}} for explanations.}
 
 \item{common_scale}{A function for applying a common scale across all subplots.}
 
@@ -48,6 +50,12 @@ their neighbours data.}
 \item{text_on_diag}{Whether to apply text on diagonal.
 This argument applies only if one or more of the corners
 have plots.}
+
+\item{diag_share_ylim}{\strong{Deprecated} Users should use diag_share_lim instead}
+
+\item{scale_diag_plot}{Whether to unit scale diag only pairplot. If the function
+passed to map_diag does not consider argument \code{unit_y} setting this option to TRUE might
+lead to scale limits issues.}
 
 \item{...}{Arguments passed to \code{\link[=mapplot]{mapplot()}}}
 

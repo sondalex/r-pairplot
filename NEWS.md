@@ -1,7 +1,7 @@
 # pairplot 0.1.1
 
 ## Changes
-
+* `diag_share_ylim` is deprecated in favor of `diag_share_lim`.
 * Remove pairgrid unused arguments.
 * Add possible knowledge of surrounding subplots for diagonal plots.
 

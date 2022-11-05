@@ -130,11 +130,11 @@ add_modify_aes <- function(mapping, ...) {
 #' for each part (lower corner, upper corner, diagonal). The call on diagonal should be last
 #' in order to have access to neighbour subplots metadata.
 #' @param xlim_func See [pairgrid()] parameter `common_xlim` (equivalent).
-#' @param ylim_func A function to set y axis limits. If set in conjunction with `diag_share_ylim` set to TRUE,
+#' @param ylim_func A function to set y axis limits. If set in conjunction with `diag_share_lim` set to TRUE,
 #' plots on the ylimit, will have their ylim set in common.
-#' @param diag_share_ylim If set to TRUE. Y axis limits will also use `ylim_func`, except for diagonal only pairplot. In this case, 
-#' will be normalized to unit length if the provided function implements unit scale normalization. See function
+#' @param diag_share_lim If set to TRUE. Y and X axis limits will also use `ylim_func`.
 #' [pair_geom_histogram] for an example.
+#' @param scale_diag_plot See [pairgrid()]
 #' @param neighbours A map (named list) or `NULL`. 
 #' Map of the form: `subplot_index=list(t=<int|NULL>, b=<int|NULL>, l=<int|NULL>, r=<int|NULL>)`
 #' If not NULL, the function call
@@ -143,7 +143,7 @@ add_modify_aes <- function(mapping, ...) {
 #' @param check.overlap See[ggplot2::guide_axis()]
 #' @import ggplot2
 #' @import rlang
-mapplot <- function(data, mapping, pairs, grobs, indices, func, no_upper, no_lower, xlim_func=NULL, ylim_func=NULL, diag_share_ylim=TRUE, common_scale=NULL, check.overlap=TRUE, neighbours=NULL, ...) {
+mapplot <- function(data, mapping, pairs, grobs, indices, func, no_upper, no_lower, xlim_func=NULL, ylim_func=NULL, diag_share_lim=TRUE, common_scale=NULL, check.overlap=TRUE, neighbours=NULL, scale_diag_plot=TRUE, ...) {
   for (index in indices) {
     pair <- pairs[[index]]
     x <- pair[2]
@@ -160,7 +160,7 @@ mapplot <- function(data, mapping, pairs, grobs, indices, func, no_upper, no_low
         }
         
         # If upper diagonal elements are NULL. Then 0-1 scale the diagonal.
-        unit_y = ifelse(any(duplicated(pair)) & no_upper & no_lower, TRUE, FALSE)
+        unit_y = ifelse(any(duplicated(pair)) & no_upper & no_lower & scale_diag_plot, TRUE, FALSE)
         if (length(neighbours)){
           current_neighbour_pos = neighbours[[as.character(index)]]
           near_data=neighbour_data(neighbour_pos=current_neighbour_pos, grobs = grobs)
@@ -168,15 +168,20 @@ mapplot <- function(data, mapping, pairs, grobs, indices, func, no_upper, no_low
         } else {
           p <- func(data, mapping = mapping, unit_y=unit_y)
         }
-        if(length(xlim_func) & diag_share_ylim) {
-          xlim_pair <- xlim_func(data=data, x=x)
-        } else{
-          xlim_pair <- NULL
+        xlim_pair <- NULL
+        if(length(xlim_func)){
+          if (diag_share_lim) {
+            xlim_pair <- xlim_func(data=data, x=x)
+          } else {
+            if (x != y) {
+              xlim_pair=xlim_func(data=data, x=x)
+            }
+          }
         }
 
         ylim_pair <- NULL
         if (length(ylim_func)) {
-          if (diag_share_ylim & !unit_y) {
+          if (diag_share_lim) {
             ylim_pair=ylim_func(data=data, y=y)
           } else {
             # picky on selection: apply ylim to off diagonal only.
@@ -184,8 +189,8 @@ mapplot <- function(data, mapping, pairs, grobs, indices, func, no_upper, no_low
               ylim_pair=ylim_func(data=data, y=y)
             }
           }
-          p <- p + coord_cartesian(xlim = xlim_pair, ylim=ylim_pair)
         }
+        p <- p + coord_cartesian(xlim = xlim_pair, ylim=ylim_pair)
         # pass the identity guide.
         # ifelse on complicated object has uninented behaviour.
         guide <- if(check.overlap) guide_axis(check.overlap=check.overlap) else{waiver()}
@@ -228,7 +233,7 @@ global_ylim <- function(data, y) {
 #' @param map_upper Idem
 #' @param only_x Boolean indicating whether the method passed to map_diag has aesteatics no y axis, such as histogram
 #' @param common_xlim Accepts a function which returns a pair of limit. By default uses [global_xlim()]
-#' @param diag_share_ylim See [mapplot()] for explanations.
+#' @param diag_share_lim See [mapplot()] for explanations.
 #' @param common_scale A function for applying a common scale across all subplots.
 #' @param repeat_text Boolean indicating whether the text (digits) should be set on all subplots. If FALSE, only the left and bottom contigous plots have text set.
 #' @param text_on_diag Whether to apply text on diagonal. 
@@ -239,6 +244,10 @@ global_ylim <- function(data, y) {
 #' passed to map_diag, functions. When specified the subplots 
 #' on top-left and bottom-right corner will always return 
 #' their neighbours data.
+#' @param diag_share_ylim **Deprecated** Users should use diag_share_lim instead
+#' @param scale_diag_plot Whether to unit scale diag only pairplot. If the function
+#' passed to map_diag does not consider argument `unit_y` setting this option to TRUE might
+#' lead to scale limits issues.
 #' @param ... Arguments passed to [mapplot()]
 #'
 #' @details Details 
@@ -263,7 +272,10 @@ global_ylim <- function(data, y) {
 #' @export
 #' @import ggplot2
 #' @import patchwork
-pairgrid <- function(data, mapping=NULL, map_lower, map_diag, map_upper, common_xlim=global_xlim, common_ylim=global_ylim, diag_share_ylim=TRUE, common_scale=scales::label_number(accuracy=1), repeat_labels=FALSE, repeat_text=FALSE, check.overlap=TRUE, diag_neighbour=NULL, text_on_diag=T, ...) {
+pairgrid <- function(data, mapping=NULL, map_lower, map_diag, map_upper, common_xlim=global_xlim, common_ylim=global_ylim, diag_share_lim=TRUE, common_scale=scales::label_number(accuracy=1), repeat_labels=FALSE, repeat_text=FALSE, check.overlap=TRUE, diag_neighbour=NULL, text_on_diag=T, diag_share_ylim=NULL, scale_diag_plot=FALSE, ...) {
+  if (length(diag_share_ylim)) {
+    stop("diag_share_ylim is deprecated and has been replaced by diag_share_lim.")
+  }
   size <- ncol(data)
   ncol <- size
   nrow <- ncol
@@ -305,28 +317,30 @@ pairgrid <- function(data, mapping=NULL, map_lower, map_diag, map_upper, common_
                    data, pairs=rows_col_pairs, grobs=grobs,
                    indices=lower_index, mapping = mapping,
                    func=map_lower, xlim_func = common_xlim,
-                   ylim_func=common_ylim, diag_share_ylim=diag_share_ylim,
+                   ylim_func=common_ylim, diag_share_lim=diag_share_lim,
                    common_scale=common_scale, no_upper=no_upper, no_lower=no_lower,
-                   check.overlap=check.overlap, neighbour=NULL,
+                   check.overlap=check.overlap, neighbour=NULL, scale_diag_plot=scale_diag_plot,
                    ...
                    )
   grobs <- mapplot(
                    data, pairs=rows_col_pairs, grobs=grobs,
                    indices=upper_index, mapping=mapping, func=map_upper, 
                    xlim_func = common_xlim, ylim_func=common_ylim, 
-                   diag_share_ylim=diag_share_ylim,
+                   diag_share_lim=diag_share_lim,
                    common_scale=common_scale,
                    no_upper=no_upper, no_lower=no_lower,
                    check.overlap=check.overlap, neighbour=NULL,
+                   scale_diag_plot=scale_diag_plot,
                    ...
                    )
   grobs <- mapplot(
                    data, pairs=rows_col_pairs, grobs=grobs,
                    indices=diag_index, mapping=mapping, func=map_diag,
                    xlim_func = common_xlim, ylim_func=common_ylim,
-                   diag_share_ylim=diag_share_ylim,
+                   diag_share_lim=diag_share_lim,
                    common_scale=common_scale, no_upper=no_upper, no_lower=no_lower,
                    check.overlap=check.overlap, neighbour=map_neighbours,
+                   scale_diag_plot=scale_diag_plot,
                    ...
                    )
   

@@ -17,21 +17,21 @@ mapplot(
   no_lower,
   xlim_func = NULL,
   ylim_func = NULL,
-  diag_share_ylim = TRUE,
+  diag_share_lim = TRUE,
   common_scale = NULL,
   check.overlap = TRUE,
   neighbours = NULL,
+  scale_diag_plot = TRUE,
   ...
 )
 }
 \arguments{
 \item{xlim_func}{See \code{\link[=pairgrid]{pairgrid()}} parameter \code{common_xlim} (equivalent).}
 
-\item{ylim_func}{A function to set y axis limits. If set in conjunction with \code{diag_share_ylim} set to TRUE,
+\item{ylim_func}{A function to set y axis limits. If set in conjunction with \code{diag_share_lim} set to TRUE,
 plots on the ylimit, will have their ylim set in common.}
 
-\item{diag_share_ylim}{If set to TRUE. Y axis limits will also use \code{ylim_func}, except for diagonal only pairplot. In this case,
-will be normalized to unit length if the provided function implements unit scale normalization. See function
+\item{diag_share_lim}{If set to TRUE. Y and X axis limits will also use \code{ylim_func}.
 \link{pair_geom_histogram} for an example.}
 
 \item{check.overlap}{See\code{\link[ggplot2:guide_axis]{ggplot2::guide_axis()}}}
@@ -41,6 +41,8 @@ Map of the form: \verb{subplot_index=list(t=<int|NULL>, b=<int|NULL>, l=<int|NUL
 If not NULL, the function call
 \code{func()} will include the data in argument \code{neighbour_ggdata} from the neighbour(s): \code{func(neighbour_ggdata=list(t=ggplot_build(grobs_index[[t_index]])), etc.)}.
 There are no checks whether the selected grobs exist. Checks are reserved to function calling \code{mapplot}.}
+
+\item{scale_diag_plot}{See \code{\link[=pairgrid]{pairgrid()}}}
 }
 \description{
 In order to to construct a full pair matrix. This function has to be called

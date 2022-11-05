@@ -78,10 +78,11 @@ in order to have access to neighbour subplots metadata.</p>
 <span>  <span class="va">no_lower</span>,</span>
 <span>  xlim_func <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ylim_func <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  diag_share_ylim <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  diag_share_lim <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  common_scale <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  check.overlap <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  neighbours <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scale_diag_plot <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -93,13 +94,12 @@ in order to have access to neighbour subplots metadata.</p>
 
 
 <dt>ylim_func</dt>
-<dd><p>A function to set y axis limits. If set in conjunction with <code>diag_share_ylim</code> set to TRUE,
+<dd><p>A function to set y axis limits. If set in conjunction with <code>diag_share_lim</code> set to TRUE,
 plots on the ylimit, will have their ylim set in common.</p></dd>
 
 
-<dt>diag_share_ylim</dt>
-<dd><p>If set to TRUE. Y axis limits will also use <code>ylim_func</code>, except for diagonal only pairplot. In this case,
-will be normalized to unit length if the provided function implements unit scale normalization. See function
+<dt>diag_share_lim</dt>
+<dd><p>If set to TRUE. Y and X axis limits will also use <code>ylim_func</code>.
 <a href="pair_geom_histogram.html">pair_geom_histogram</a> for an example.</p></dd>
 
 
@@ -113,6 +113,10 @@ Map of the form: <code>subplot_index=list(t=&lt;int|NULL&gt;, b=&lt;int|NULL&gt;
 If not NULL, the function call
 <code>func()</code> will include the data in argument <code>neighbour_ggdata</code> from the neighbour(s): <code>func(neighbour_ggdata=list(t=ggplot_build(grobs_index[[t_index]])), etc.)</code>.
 There are no checks whether the selected grobs exist. Checks are reserved to function calling <code>mapplot</code>.</p></dd>
+
+
+<dt>scale_diag_plot</dt>
+<dd><p>See <code><a href="pairgrid.html">pairgrid()</a></code></p></dd>
 
 </dl></div>
 
