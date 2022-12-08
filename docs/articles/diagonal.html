@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">pairplot</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -112,12 +112,12 @@
 <span><span class="co">#&gt;                 }</span></span>
 <span><span class="co">#&gt;             }</span></span>
 <span><span class="co">#&gt;             xaxis_bounds &lt;- if (length(xdata)) </span></span>
-<span><span class="co">#&gt;                 xdata$layout$panel_scales_x[[1]]$range$range</span></span>
+<span><span class="co">#&gt;                 range(xdata$data[[1]]$x)</span></span>
 <span><span class="co">#&gt;             else {</span></span>
 <span><span class="co">#&gt;                 c(min(data[x]), max(data[x]))</span></span>
 <span><span class="co">#&gt;             }</span></span>
 <span><span class="co">#&gt;             yaxis_bounds &lt;- if (length(ydata)) </span></span>
-<span><span class="co">#&gt;                 ydata$layout$panel_scales_y[[1]]$range$range</span></span>
+<span><span class="co">#&gt;                 range(ydata$data[[1]]$y)</span></span>
 <span><span class="co">#&gt;             else {</span></span>
 <span><span class="co">#&gt;                 c(min(data[x]), max(data[x]))</span></span>
 <span><span class="co">#&gt;             }</span></span>
@@ -140,7 +140,7 @@
 <span><span class="co">#&gt;     }</span></span>
 <span><span class="co">#&gt;     return(p)</span></span>
 <span><span class="co">#&gt; }</span></span>
-<span><span class="co">#&gt; &lt;bytecode: 0x55571981e5c8&gt;</span></span>
+<span><span class="co">#&gt; &lt;bytecode: 0x55deeeed6b38&gt;</span></span>
 <span><span class="co">#&gt; &lt;environment: namespace:pairplot&gt;</span></span></code></pre></div>
 <p>Now, let’s see what happens when we do not use this feature. We compute the scatter and geom smooth of rank transformed variable. We use internal functions <code>geom_point_rank()</code> &amp; <code>geom_smooth_rank()</code> to compute the lower corner plots.</p>
 <p>:</p>
