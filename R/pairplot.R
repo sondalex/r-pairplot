@@ -448,7 +448,7 @@ pair_geom_histogram <- function(data, mapping, neighbour_ggdata=NULL, unit_y=FAL
         
         # Two corner case
         # 1)
-        # 1 NA NA 
+        # 1 NA NA
         # 1  1 NA
         # 1  1  1
 
@@ -469,9 +469,9 @@ pair_geom_histogram <- function(data, mapping, neighbour_ggdata=NULL, unit_y=FAL
         # Combination of upper_corner and lower corner have to be considered
         # for the top left and bottom right graphic.
         # get first non-null for y and x axis.
-        
-        xaxis_bounds <- if(length(xdata)) xdata$layout$panel_scales_x[[1]]$range$range else {c(min(data[x]), max(data[x]))}
-        yaxis_bounds <- if(length(ydata)) ydata$layout$panel_scales_y[[1]]$range$range else {c(min(data[x]), max(data[x]))}
+        # This is still experimental
+        xaxis_bounds <- if(length(xdata)) range(xdata$data[[1]]$x) else {c(min(data[x]), max(data[x]))}
+        yaxis_bounds <- if(length(ydata)) range(ydata$data[[1]]$y) else {c(min(data[x]), max(data[x]))}
         
         lower_bound_y <- yaxis_bounds[1]
         upper_bound_y <- yaxis_bounds[2]
@@ -484,8 +484,16 @@ pair_geom_histogram <- function(data, mapping, neighbour_ggdata=NULL, unit_y=FAL
     } else {
       p <- ggplot(data = data, mapping = mapping)
       upper_bound_y <- max(data[x])
-      lower_bound_y <- min(data[x]) 
+      lower_bound_y <- min(data[x])
     }
+    # The issue is that while has almost no chance of being negative
+    # that not the case of the y window. y window often includes a little negative offset
+    # for visuals
+    # Thats the cause of the issue
+    # How to access the neighbour y transformed data ? 
+    # upperbound and y_lower bound is not bounded to be positive
+    # thats the issue
+    # (b - a) * (x - min(x)) / (max(x) - min(x)) + a
     p <- p + geom_histogram(aes(y=after_stat((upper_bound_y - lower_bound_y) * ((count - min(count)) / (max(count) - min(count))) + lower_bound_y)), stat=stat, bins=bins, binwidth=binwidth, ...)
   }
 
